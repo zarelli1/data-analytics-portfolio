@@ -12,7 +12,7 @@ contract EstruturaPilha {
 
     event ItemAdicionado(uint256 valor);
     event ItemRemovido(uint256 valor);
-
+PAREI AQUI
     // Adiciona um elemento ao topo da pilha (PUSH)
     function push(uint256 _valor) public {
         itens.push(_valor);
