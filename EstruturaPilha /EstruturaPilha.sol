@@ -18,7 +18,7 @@ contract EstruturaPilha {
         itens.push(_valor);
         emit ItemAdicionado(_valor);
     }
-
+PAREI AQUI
     // Remove e retorna o elemento do topo (POP)
     function pop() public returns (uint256) {
         require(itens.length > 0, "A pilha esta vazia");
@@ -30,7 +30,7 @@ contract EstruturaPilha {
         emit ItemRemovido(valorNoTopo);
         return valorNoTopo;
     }
-PAREI AQUI
+
     // Apenas olha o elemento do topo sem remover (PEEK)
     function peek() public view returns (uint256) {
         require(itens.length > 0, "A pilha esta vazia");
