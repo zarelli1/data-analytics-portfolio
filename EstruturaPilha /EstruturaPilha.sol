@@ -12,7 +12,7 @@ contract EstruturaPilha {
 
     event ItemAdicionado(uint256 valor);
     event ItemRemovido(uint256 valor);
-PAREI AQUI
+
     // Adiciona um elemento ao topo da pilha (PUSH)
     function push(uint256 _valor) public {
         itens.push(_valor);
@@ -30,7 +30,7 @@ PAREI AQUI
         emit ItemRemovido(valorNoTopo);
         return valorNoTopo;
     }
-
+PAREI AQUI
     // Apenas olha o elemento do topo sem remover (PEEK)
     function peek() public view returns (uint256) {
         require(itens.length > 0, "A pilha esta vazia");
