@@ -20,8 +20,6 @@ contract FilaComPrioridade {
         emit ItemAdicionado(_valor, _prioridade);
     }
 
-parei aqui
-
 
 function pop() public returns (uint256) {
         require(fila.length > 0, "A fila esta vazia");
