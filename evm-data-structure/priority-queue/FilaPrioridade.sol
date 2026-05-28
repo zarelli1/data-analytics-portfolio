@@ -37,8 +37,6 @@ function pop() public returns (uint256) {
         }
 
 
-
-        // Salva o valor do paciente mais grave antes de apagá-lo
         uint256 valorRetornado = fila[indiceMaisGrave].valor;
 
         // 4. O TRUQUE DE MESTRE (Swap & Pop)
@@ -50,5 +48,6 @@ function pop() public returns (uint256) {
 
         emit ItemRemovido(valorRetornado, maiorPrioridade);
         return valorRetornado;
+    }
     }
 }
