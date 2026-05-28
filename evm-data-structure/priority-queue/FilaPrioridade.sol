@@ -49,6 +49,6 @@ function pop() public returns (uint256) {
 
 
   0        1        2      3  
-maria    joao     paulo   leo
+maria    joao     paulo   
          grave
 
