@@ -39,11 +39,8 @@ function pop() public returns (uint256) {
 
         uint256 valorRetornado = fila[indiceMaisGrave].valor;
 
-        // 4. O TRUQUE DE MESTRE (Swap & Pop)
-        // Movemos o ÚLTIMO paciente da fila para a cadeira do paciente que vai sair.
         fila[indiceMaisGrave] = fila[fila.length - 1];
         
-        // Agora apagamos a última cadeira (que ficou duplicada).
         fila.pop();
 
         emit ItemRemovido(valorRetornado, maiorPrioridade);
