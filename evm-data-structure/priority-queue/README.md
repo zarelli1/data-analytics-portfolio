@@ -1,88 +1,152 @@
-# Smart Contract: Fila de Prioridade (Priority Queue)
+Estrutura geral
+Esse contrato implementa uma fila de prioridade usando um heap mínimo (min-heap) em Solidity. Vamos dissecar cada pedaço:
 
-## Visão Geral
+// SPDX-License-Identifier: MIT
+Comentário obrigatório que declara a licença do código. MIT = código aberto, qualquer um pode usar. Exigido pelo compilador Solidity moderno para evitar warnings.
 
-Este repositório contém a implementação de um contrato inteligente em Solidity que gerencia uma **Fila de Prioridade baseada em Min-Heap**.
+pragma solidity ^0.8.20;
 
-Diferente de uma fila tradicional (FIFO), onde o primeiro a chegar é o primeiro a ser atendido, este contrato funciona como a triagem de um Pronto-Socorro: **a urgência dita a ordem de execução, independentemente do tempo de espera.** Quanto menor o número de prioridade, mais urgente o item.
+pragma = diretiva de compilador (não é código executável)
+solidity ^0.8.20 = "compile com versão 0.8.20 ou superior, mas não 0.9.x"
+O ^ é o operador "compatível com" (igual ao npm)
 
----
 
-## Arquitetura
+contract FilaPrioridade { ... }
+A palavra contract é o equivalente Solidity de class em Java/JS. Tudo dentro das chaves é o contrato implantado na blockchain.
 
-O contrato armazena os dados em um array dinâmico (`No[] private pilha`) tratado internamente como uma **árvore binária completa (Min-Heap)**. Cada elemento é uma struct com dois campos:
+struct No { ... }
+soliditystruct No {
+    uint256 prioridade;
+    uint256 chegada;
+    string  dado;
+}
 
-- `prioridade` — número inteiro; quanto menor, mais urgente.
-- `dado` — o conteúdo do item (ID do usuário, ID da transação, nome da tarefa, etc).
+struct = estrutura de dados customizada (igual em C/Go)
+No = nome do tipo (um "nó" da fila)
+uint256 = inteiro sem sinal de 256 bits (0 até ~1.16 × 10⁷⁷). Tipo padrão do EVM
+prioridade = número que define quem sai primeiro (menor = mais urgente)
+chegada = contador de inserção, serve como desempate: chegou primeiro, sai primeiro
+string = sequência de bytes UTF-8 de comprimento dinâmico
+dado = o payload — qualquer texto que o usuário quer armazenar
 
-A posição de cada elemento no array define sua relação com os demais via fórmula matemática, sem ponteiros:
 
-```
-pai(i)       = (i - 1) / 2
-filho esq(i) = 2 * i + 1
-filho dir(i) = 2 * i + 2
-```
+As três variáveis de estado
+solidityNo[]    private pilha;
+uint256 private tamanho;
+uint256 private contador;
 
-A propriedade fundamental mantida em todo momento: `pilha[pai].prioridade <= pilha[filho].prioridade`. Isso garante que o elemento de menor prioridade esteja **sempre no índice 0**.
+No[] = array dinâmico do tipo No. Fica no storage da blockchain (persistido entre chamadas)
+private = só o próprio contrato pode acessar (não expõe getter automático)
+pilha = o array que armazena o heap. Nome um pouco confuso — é o array do heap, não uma pilha LIFO
+tamanho = quantos elementos válidos existem no array. Pode ser menor que pilha.length (array pode ter "buracos" no final)
+contador = incrementa a cada enqueue, serve como timestamp de chegada para desempate de prioridade igual
 
----
 
-## Funções
+function enqueue(uint256 p, string calldata d) external
+solidityNo memory novo = No(p, contador++, d);
 
-### `enqueue(uint256 prioridade, string dado)` — inserção
+function = declaração de função
+uint256 p = parâmetro prioridade
+string calldata d = string lida direto do calldata (área de dados da transação). calldata é mais barato que memory para parâmetros de entrada — não copia, apenas referencia
+external = só pode ser chamada de fora do contrato (não internamente por outras funções)
+No memory novo = cria um nó temporário na memória (não no storage, mais barato)
+No(p, contador++, d) = construtor do struct. contador++ usa o valor atual e depois incrementa (pós-incremento)
 
-1. O novo elemento é inserido no fim do array (`pilha[tamanho]`).
-2. O algoritmo **heapify-up** compara o elemento com seu pai e os troca enquanto o filho for menor.
-3. O loop para quando o heap estiver correto ou quando chegar na raiz.
+solidityif (tamanho == pilha.length) pilha.push(novo);
+else pilha[tamanho] = novo;
 
-Custo: **O(log n)** — sobe no máximo a altura da árvore.
+Se o array está cheio, push expande e adiciona
+Caso contrário, reutiliza uma posição que já existe no array (mais barato em gas — evita expansão de storage)
 
-### `dequeue()` — remoção do mais urgente
+solidityuint256 i = tamanho++;
 
-1. Salva a raiz (`pilha[0]`), que é sempre o menor elemento.
-2. Move o último elemento para a raiz e decrementa `tamanho` manualmente — sem usar `.pop()` nativo.
-3. O algoritmo **heapify-down** compara o elemento com seus dois filhos e troca com o menor deles, repetindo até o heap estar correto.
+i recebe o índice da nova folha (posição onde o nó foi inserido)
+tamanho++ incrementa o tamanho depois de capturar o valor — o nó entra na posição tamanho original, depois o tamanho cresce
 
-Custo: **O(log n)** — desce no máximo a altura da árvore.
+Sobe no heap ("sift up"):
+soliditywhile (i > 0) {
+    uint256 pai = (i - 1) / 2;
+    if (_menor(i, pai)) {
+        _swap(i, pai);
+        i = pai;
+    } else break;
+}
 
-### `peek()` — consulta sem remoção
+while (i > 0) = enquanto não chegou na raiz (índice 0)
+pai = (i - 1) / 2 = fórmula clássica de heap para achar o pai. Em arrays 0-indexados, filho i tem pai em (i-1)/2
+_menor(i, pai) = verifica se o nó em i deve sair antes do pai (menor prioridade numérica, ou mesmo prioridade mas chegou antes)
+_swap(i, pai) = troca os dois nós no array
+i = pai = sobe para continuar verificando
+else break = parou de subir — a propriedade do heap está satisfeita
 
-Retorna o elemento de menor prioridade sem modificar a fila. Acesso direto a `pilha[0]`.
 
-Custo: **O(1)**.
+function dequeue() external returns (uint256, string memory)
+solidityrequire(tamanho > 0, "fila vazia");
+uint256       p = pilha[0].prioridade;
+string memory d = pilha[0].dado;
 
-### `size()` — tamanho atual
+require(condição, mensagem) = reverte a transação inteira se a condição for falsa. Equivalente a assert com mensagem
+pilha[0] = a raiz do heap, que sempre contém o menor elemento (quem sai primeiro)
+string memory d = copia a string para memória antes de sobrescrever o índice 0
 
-Retorna quantos elementos estão na fila.
+soliditypilha[0] = pilha[--tamanho];
 
-Custo: **O(1)**.
+--tamanho = decrementa antes de usar (pré-decremento). tamanho passa a ser o índice do último elemento válido
+Move o último elemento para a raiz. Isso quebra temporariamente a propriedade do heap
 
----
+Desce no heap ("sift down"):
+soliditywhile (true) {
+    uint256 e = 2*i+1, d2 = 2*i+2, m = i;
 
-## Padrão de controle de tamanho
+e = 2*i+1 = índice do filho esquerdo (fórmula padrão de heap)
+d2 = 2*i+2 = índice do filho direito
+d2 foi nomeado assim para evitar conflito com o parâmetro d do dequeue. Um pouco confuso, sim
+m = i = assume que o menor está em i (vai ser desafiado pelos filhos)
 
-O contrato utiliza uma variável `uint256 private tamanho` para controlar o número de elementos válidos no array, em vez de depender de `.length` ou `.pop()` nativo. Isso permite reutilizar slots liberados por `dequeue` em inserções futuras, reduzindo escritas desnecessárias no storage.
+solidityif (e  < tamanho && _menor(e,  m)) m = e;
+if (d2 < tamanho && _menor(d2, m)) m = d2;
 
----
+e < tamanho = filho existe (não está fora dos limites)
+Compara esquerdo com m, depois direito com m. m acumula o índice do menor dos três (pai + dois filhos)
 
-## Otimização de Gas
+solidityif (m != i) { _swap(i, m); i = m; } else break;
 
-| operação | busca linear (O(n)) | min-heap (este contrato) |
-|---|---|---|
-| inserir | O(1) | O(log n) |
-| remover o mais urgente | O(n) + O(1) swap | O(log n) |
-| consultar o mais urgente | O(n) | O(1) |
+Se o menor não é o pai atual, troca e desce
+Se o pai já é o menor, o heap está restaurado — sai do loop
 
-A busca linear percorre o array inteiro a cada remoção. Em filas grandes na Blockchain, isso esgota o limite de Gas da transação. O Min-Heap elimina esse gargalo: o elemento mais urgente está sempre na raiz, e tanto a inserção quanto a remoção percorrem no máximo a altura da árvore — que cresce de forma logarítmica com o número de elementos.
+solidityreturn (p, d);
 
----
+Retorna tupla com prioridade e dado do elemento removido
+Solidity permite múltiplos valores de retorno nativamente
 
-## Casos de Uso no Mundo Real (Web3)
 
-- **DeFi** — fila de liquidação de garantias, priorizando empréstimos com maior risco de insolvência.
-- **DAOs** — fila de execução de propostas, onde correções de segurança furam a fila de votações comuns.
-- **GameFi** — processamento de ações em massa, priorizando jogadores ou transações críticas.
-- **Protocolos de mensagens** — entrega ordenada por urgência em sistemas de comunicação descentralizados.
+function peek() external view returns (uint256, string memory)
 
-<img width="1440" height="1128" alt="image" src="https://github.com/user-attachments/assets/51b56db5-6cf8-4181-894c-4cf25f6d662d" />
+view = função que lê estado mas não modifica. Não gasta gas quando chamada externamente (off-chain)
+Retorna a raiz sem remover — "espiar" a fila
 
+
+function size() external view returns (uint256)
+Simples getter do tamanho atual. view pela mesma razão acima.
+
+function _menor(uint256 a, uint256 b) private view returns (bool)
+solidityif (pilha[a].prioridade != pilha[b].prioridade)
+    return pilha[a].prioridade < pilha[b].prioridade;
+return pilha[a].chegada < pilha[b].chegada;
+
+private = só chamável internamente (funções auxiliares). Por convenção em Solidity, funções internas começam com _
+Primeiro critério: menor prioridade numérica vence
+Segundo critério (desempate): menor chegada vence — quem entrou antes sai antes (FIFO dentro da mesma prioridade)
+
+
+function _swap(uint256 a, uint256 b) private
+solidityNo memory t = pilha[a];
+pilha[a]    = pilha[b];
+pilha[b]    = t;
+
+Troca clássica de dois elementos usando variável temporária t (em memory, barato)
+Atualiza diretamente no storage (pilha é estado persistente)
+
+Agora veja o diagrama da estrutura do heap:
+
+<img width="1440" height="1128" alt="image" src="https://github.com/user-attachments/assets/54621bf8-9b97-4b77-932b-3d53fd115f52" />
