@@ -23,7 +23,7 @@ contract FilaPrioridade {
         uint256 i = fila.length - 1;
         while (i > 0) {
             uint256 j = i - 1;
-            if (_temPrioridade(fila[i], fila[j])) { // chama 5
+            if (_temPrioridade(fila[i], fila[j])) { 
                 Cliente memory temp = fila[i];
                 fila[i] = fila[j];
                 fila[j] = temp;
