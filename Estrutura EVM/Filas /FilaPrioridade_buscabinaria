@@ -62,7 +62,7 @@ contract FilaPrioridade {
             uint256 meio = esq + (dir - esq) / 2;
 // VF.M.
             if (fila[meio].gravidade == _alvo) {
-// C.P.       uint256 primeiro = meio;
+// B.P.       uint256 primeiro = meio;
                 while (primeiro > 0 && fila[primeiro - 1].gravidade == _alvo) {
                     primeiro--;
                 }
