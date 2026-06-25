@@ -57,12 +57,12 @@ contract FilaPrioridade {
 
         uint256 esq = 0;
         uint256 dir = fila.length - 1;
-
+//CAL.
         while (esq <= dir) {
             uint256 meio = esq + (dir - esq) / 2;
-
+// VF.M.
             if (fila[meio].gravidade == _alvo) {
-                uint256 primeiro = meio;
+// C.P.       uint256 primeiro = meio;
                 while (primeiro > 0 && fila[primeiro - 1].gravidade == _alvo) {
                     primeiro--;
                 }
@@ -70,10 +70,10 @@ contract FilaPrioridade {
                 return (true, primeiro, fila[primeiro].endereco);
             }
 
-            if (fila[meio].gravidade > _alvo) {
+// IR.D       if (fila[meio].gravidade > _alvo) {
                 esq = meio + 1;
             } 
-            else {
+// IR.E      else {
                 if (meio == 0) break;
                 dir = meio - 1;
             }
