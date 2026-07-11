@@ -15,12 +15,6 @@ Bem-vindo ao laboratório aberto de Leonardo Zarelli.
 - [x] Auditoria Prática de Transações e Anti-Blind Signing (MetaMask & Etherscan)
 - [x] Verificação de Assinaturas (Payloads) e Derivation Paths em Hardware Wallets
 
-## 🗺️ Desenvolvimento (Trilha Cyfrin)
-
-### 📦 Módulo 1: Fundamentos da EVM (Simple Storage)
-- [x] Variáveis de Estado e Funções de Leitura/Escrita
-- [x] Tipos Complexos: Structs, Arrays e Gestão de Memória (`memory` vs `storage`)
-
 # 🐍 Trilha Python: Algoritmos Aplicados a Mercado
 
 ### 📦 Fase 1: Fundamentos Revisados (Variáveis de Mercado)
