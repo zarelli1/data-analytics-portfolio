@@ -1,1 +1,3 @@
-# Estudo que fiz para ter base no sistema web3 
+# sistema web3 
+
+*Estudo basico de fundamento sobre carteira e como funciona a linguagem solidity*
